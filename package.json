@@ -1,0 +1,37 @@
+{
+  "name": "tiddy",
+  "version": "1.0.0",
+  "description": "I'm looking to build a JavaScript/TypeScript SDK that helps developers create AI agents that learn from conversations with users. Here's what it needs to do:",
+  "main": "main.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --loader ts-node/esm src/main.ts",
+    "example": "node --loader ts-node/esm scripts/run-example.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "mic": "^2.1.2",
+    "openai-realtime-api": "^1.0.7",
+    "speaker": "^0.5.5",
+    "ts-node": "^10.9.2"
+  },
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "src/**/*",
+    "types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ],
+  "type": "module"
+}

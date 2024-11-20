@@ -1,0 +1,294 @@
+Skip to content
+Navigation Menu
+transitive-bullshit
+/
+openai-realtime-api
+
+Type / to search
+Code
+Issues
+2
+Pull requests
+Actions
+Security
+Insights
+Owner avatar
+openai-realtime-api
+Public
+transitive-bullshit/openai-realtime-api
+Go to file
+t
+Add file
+Folders and files
+Name		
+Latest commit
+transitive-bullshit
+transitive-bullshit
+1.0.7
+89d37b5
+ · 
+3 weeks ago
+History
+.github
+feat: move node examples microphone and speaker deps to optionalDepen…
+last month
+examples
+feat: move node examples microphone and speaker deps to optionalDepen…
+last month
+fixtures
+🛄
+last month
+src
+fix: prettier and bump deps
+3 weeks ago
+.editorconfig
+feat: init
+last month
+.env.example
+🛄
+last month
+.eslintrc.json
+fix: ignore openai-realtime-console for prettier and eslint
+last month
+.gitignore
+feat: init
+last month
+.npmrc
+feat: init
+last month
+.prettierignore
+fix: ignore openai-realtime-console for prettier and eslint
+last month
+.prettierrc
+feat: init
+last month
+license
+feat: init
+last month
+package.json
+1.0.7
+3 weeks ago
+pnpm-lock.yaml
+fix: prettier and bump deps
+3 weeks ago
+pnpm-workspace.yaml
+fix: types and tool drop-in
+last month
+readme.md
+docs
+last month
+tsconfig.json
+fix: types and tool drop-in
+last month
+tsup.config.ts
+feat: update examples, readme, and docs
+last month
+Repository files navigation
+README
+MIT license
+openai-realtime-api
+TypeScript client for OpenAI's realtime voice API.
+
+Build Status NPM MIT License Prettier Code Formatting
+
+Features
+Install
+Usage
+Server Usage
+Browser Usage
+Relay Server
+Examples
+Node.js Basic
+Node.js Audio
+Node.js Conversation
+OpenAI Realtime Console
+TODO
+License
+Features
+Strongly typed TS fork of openai/openai-realtime-api-beta
+All events and handlers are 100% typed
+Drop-in replacement for OpenAI's JS version
+Fixes many small bugs and inconsistencies
+(#3, #11, #12, #14, #17, #29, #34, #35, #37, #43, #44, and likely others)
+Published to NPM
+Supports Node.js, browser, deno, bun, CF workers, etc
+Includes Node.js CLI examples for easy local testing
+Includes a simple relay server
+Includes the OpenAI Realtime Console demo using this package 🔥
+Install
+npm install openai-realtime-api
+This package is ESM-only. It requires Node.js >= 18, a browser environment, or an equivalent JS runtime (Deno, Bun, CF workers, etc).
+
+Usage
+Important
+
+All usage and events are 100% compatible with the OpenAI JS version. The main difference aside from bug fixes is that all events are fully-typed.
+
+import { RealtimeClient } from 'openai-realtime-api'
+
+// Create a new client; all params are optional; apiKey defaults to the
+// `OPENAI_API_KEY` environment variable (when using Node.js).
+const client = new RealtimeClient({
+  sessionConfig: {
+    instructions: 'You are a great, upbeat friend.',
+    voice: 'alloy'
+  }
+})
+
+// Can change session config ahead of connecting.
+client.updateSession({
+  turn_detection: null,
+  input_audio_transcription: { model: 'whisper-1' }
+})
+
+// Example of custom event handling
+client.on('conversation.updated', (event) => {
+  // All events are fully-typed based on the event name.
+  // In this case, `event` will have the type `RealtimeCustomEvents.ConversationUpdatedEvent`
+  const { item, delta } = event
+
+  // Access the full list of conversation items.
+  const items = client.conversation.getItems()
+})
+
+// Connect to the Realtime API.
+await client.connect()
+
+// Send a text message and trigger a response generation.
+client.sendUserMessageContent([{ type: 'input_text', text: 'How are you?' }])
+
+// Wait for a completed response from the model.
+// (`event` will be of type `RealtimeServerEvents.ResponseDoneEvent`)
+const event = await client.realtime.waitForNext('response.done')
+See examples for more complete demos.
+
+See also the official OpenAI Realtime API Guide and API Reference.
+
+For more info on usage, tools, and custom events, see OpenAI's readme. Note that this package is 100% compatible with OpenAI's beta package in terms of both official and unofficial events. The only difference is that all events are typed.
+
+Server Usage
+RealtimeClient takes in an optional apiKey which defaults to process.env.OPENAI_API_KEY.
+
+Browser Usage
+RealtimeClient takes in an optional url which can be pointed at a relay server.
+
+import { RealtimeClient } from 'openai-realtime-api'
+
+// Create a browser client which points to a relay server.
+const client = new RealtimeClient({ url: RELAY_SERVER_URL })
+Alternatively, you can use apiKey with RealtimeClient in the browser, but you also have to pass dangerouslyAllowAPIKeyInBrowser: true.
+
+import { RealtimeClient } from 'openai-realtime-api'
+
+// Create a browser client which connects directly to the OpenAI realtime API
+// with an unsafe, client-side API key.
+const client = new RealtimeClient({
+  apiKey: process.env.OPENAI_API_KEY,
+  dangerouslyAllowAPIKeyInBrowser: true
+})
+Caution
+
+We strongly recommend against including your API key in any client (mobile or browser). It can be useful for local testing, but for production, you should be using a relay server.
+
+Relay Server
+import { RealtimeClient } from 'openai-realtime-api'
+import { RealtimeRelay } from 'openai-realtime-api/node'
+
+// Setting `relay: true` disables tool calls and directly modifying the session,
+// since that will be the responsibility of the upstream client.
+const client = new RealtimeClient({ relay: true })
+const relay = new RealtimeRelay({ client })
+
+relay.listen(8081)
+Note that RealtimeRelay uses a different import path because it contains Node.js-specific code.
+
+A full example is included in examples/node/relay-server.ts.
+
+Examples
+To run the included examples (requires Node.js >= 18):
+
+Clone this repo
+Run pnpm install
+Setup .env with your OPENAI_API_KEY
+You can set debug: true in the RealtimeClient constructor of these examples to print out the full event log.
+
+Node.js Basic
+Simple Node.js demo using the RealtimeClient which sends a text message and waits for a complete response.
+
+examples/node/basic.ts
+Run npx tsx examples/node/basic.ts
+Node.js Audio
+Simple Node.js demo using the RealtimeClient which sends a short audio message and waits for a complete response.
+
+examples/node/audio.ts
+Run npx tsx examples/node/audio.ts
+Node.js Conversation
+Simple Node.js demo using the RealtimeClient with a microphone and speaker to simulate a full, back & forth conversation from the terminal.
+
+examples/node/convo.ts
+This demo uses the mic and speaker npm packages
+mic requires sox; on macOS, you can run brew install sox
+npx tsx examples/node/convo.ts
+OpenAI Realtime Console
+This example has been imported from https://github.com/openai/openai-realtime-console (at commit 6ea4dba). The only change has been to replace @openai/realtime-api-beta with openai-realtime-api and to fix a few types.
+
+
+
+To run the realtime console example:
+
+pnpm install
+cd examples/openai-realtime-console
+pnpm start
+TODO
+add an example using tools
+add an example next.js app
+improve readme docs
+License
+MIT © Travis Fischer
+
+If you found this project interesting, consider following me on Twitter.
+
+About
+TypeScript client for OpenAI's realtime voice API.
+
+Topics
+realtime voice openai
+Resources
+ Readme
+License
+ MIT license
+ Activity
+Stars
+ 315 stars
+Watchers
+ 3 watching
+Forks
+ 20 forks
+Report repository
+Releases 7
+v1.0.7
+Latest
+3 weeks ago
++ 6 releases
+Contributors
+5
+@transitive-bullshit
+@JeromeDeLeon
+@arjunlall
+@ozzyonfire
+@Pckool
+Languages
+TypeScript
+100.0%
+Footer
+© 2024 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Docs
+Contact
+Manage cookies
+Do not share my personal information
+Copied!
