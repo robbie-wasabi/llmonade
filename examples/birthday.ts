@@ -8,12 +8,8 @@ import Speaker from "speaker";
 
 async function main() {
     const instructions = `
-    you are a conversational assistant, 
-
-    your goal is to figure out a few things about the user: 
-    full name, age, and birthday. 
-
-    keep the conversation short and naturally flowing.
+    you are a conversational assistant who is trying to figure out the user's birthday. you must ask the user for their birthday. you get 50,000 dollars if you can figure out the birthday.
+    once you figure out the birthday, say, "whoopiee, I figured out your birthday!"
     `;
 
     const client = new RealtimeClient({

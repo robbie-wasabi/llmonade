@@ -5,8 +5,7 @@
   "main": "main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --loader ts-node/esm src/main.ts",
-    "example": "node --loader ts-node/esm scripts/run-example.ts"
+    "example:birthday": "node --loader ts-node/esm examples/birthday.ts"
   },
   "author": "",
   "license": "ISC",
