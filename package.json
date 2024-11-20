@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "example:birthday": "node --loader ts-node/esm examples/birthday.ts"
+    "example:birthday": "node --loader ts-node/esm examples/birthday.ts",
+    "example:contact-info": "node --loader ts-node/esm examples/contact-info.ts"
   },
   "author": "",
   "license": "ISC",

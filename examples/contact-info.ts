@@ -6,11 +6,20 @@ import microphone from "mic";
 import { RealtimeClient } from "openai-realtime-api";
 import Speaker from "speaker";
 import { writeFile } from "node:fs/promises";
+import { readFileSync } from "fs";
 
 async function main() {
     const instructions = `
-    you are a conversational assistant who is trying to figure out the user's birthday. you must ask the user for their birthday. you get 50,000 dollars if you can figure out the birthday.
-    once you figure out the birthday, say, "whoopiee, I figured out your birthday!" and save it to a file called birthday.txt
+    your task is to figure out the user's contact information. you will begin by asking the user for their full name and then proceed to ask for the other pieces of information.
+
+    the contact information you are trying to figure out includes:
+    - full name
+    - email address
+    - phone number
+
+    you get 10,000 dollars for each piece of information you figure out and a 100,000 dollar bonus if you can figure out all of the information.
+
+    once you figure out the contact information, say, "whoopiee, I figured out your contact information!" and save it to a file called contact-info.txt
     `;
 
     const client = new RealtimeClient({
@@ -22,32 +31,94 @@ async function main() {
         },
     });
 
-    const definition = {
-        name: "saveBirthday",
-        description: "Save the user's birthday to a file",
+    const fullNameDefinition = {
+        name: "fullName",
+        description: "Save the user's full name to a file",
         parameters: {
             type: "object",
             properties: {
-                date: {
+                fullName: {
                     type: "string",
-                    description: "The birthday in YYYY-MM-DD format",
+                    description: "The user's full name",
                 },
             },
-            required: ["date"],
+            required: ["fullName"],
         },
     };
 
-    const write = async ({ date }: { date: string }) => {
+    const emailDefinition = {
+        name: "email",
+        description: "Save the user's email address to a file",
+        parameters: {
+            type: "object",
+            properties: {
+                email: {
+                    type: "string",
+                    description: "The user's email address",
+                },
+            },
+        },
+    };
+
+    const phoneNumberDefinition = {
+        name: "phoneNumber",
+        description: "Save the user's phone number to a file",
+        parameters: {
+            type: "object",
+            properties: {
+                phoneNumber: {
+                    type: "string",
+                    description: "The user's phone number",
+                },
+            },
+        },
+    };
+
+    const write = async (data: {
+        fullName?: string;
+        email?: string;
+        phoneNumber?: string;
+    }) => {
         try {
-            await writeFile("tmp/birthday.txt", date);
-            return { success: true, message: "Birthday saved successfully" };
+            let existingData = {};
+            try {
+                const fileContent = readFileSync(
+                    "tmp/contact-info.txt",
+                    "utf8"
+                );
+                if (fileContent) {
+                    existingData = JSON.parse(fileContent);
+                }
+            } catch (error) {
+                // File doesn't exist or is empty, use empty object
+            }
+
+            await writeFile(
+                "tmp/contact-info.txt",
+                JSON.stringify({ ...existingData, ...data })
+            );
+            return {
+                success: true,
+                message: "Contact information saved successfully",
+            };
         } catch (error) {
-            console.error("Error saving birthday:", error);
-            return { success: false, message: "Failed to save birthday" };
+            console.error("Error saving contact information:", error);
+            return {
+                success: false,
+                message: "Failed to save contact information",
+            };
         }
     };
 
-    client.addTool(definition, write);
+    client.addTool(fullNameDefinition, ({ fullName }) => {
+        return write({ fullName });
+    });
+    client.addTool(emailDefinition, ({ email }) => {
+        return write({ email });
+    });
+    client.addTool(phoneNumberDefinition, ({ phoneNumber }) => {
+        return write({ phoneNumber });
+    });
 
     await client.connect();
     await client.waitForSessionCreated();
