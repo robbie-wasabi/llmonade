@@ -1,4 +1,4 @@
-import { FileStorageAdapter, StorageAdapter, StorageConfig } from "../adapters";
+import { FileStorageAdapter, StorageAdapter, StorageConfig } from "./adapters";
 import { RealtimeClient } from "openai-realtime-api";
 
 interface TiddyConfig {

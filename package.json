@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "I'm looking to build a JavaScript/TypeScript SDK that helps developers create AI agents that learn from conversations with users. Here's what it needs to do:",
   "main": "main.ts",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "example:birthday": "node --loader ts-node/esm examples/birthday.ts"
@@ -16,14 +17,6 @@
     "speaker": "^0.5.5",
     "ts-node": "^10.9.2"
   },
-  "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true
-  },
   "include": [
     "src/**/*",
     "types/**/*"
@@ -31,6 +24,5 @@
   "exclude": [
     "node_modules",
     "**/*.spec.ts"
-  ],
-  "type": "module"
+  ]
 }

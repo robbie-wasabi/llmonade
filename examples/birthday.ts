@@ -5,24 +5,54 @@ import { Readable } from "node:stream";
 import microphone from "mic";
 import { RealtimeClient } from "openai-realtime-api";
 import Speaker from "speaker";
+import { writeFile } from "node:fs/promises";
 
 async function main() {
     const instructions = `
     you are a conversational assistant who is trying to figure out the user's birthday. you must ask the user for their birthday. you get 50,000 dollars if you can figure out the birthday.
-    once you figure out the birthday, say, "whoopiee, I figured out your birthday!"
+    once you figure out the birthday, say, "whoopiee, I figured out your birthday!" and save it to a file called birthday.txt
     `;
 
     const client = new RealtimeClient({
         debug: false,
         sessionConfig: {
+            voice: "shimmer",
             instructions,
             turn_detection: null,
         },
     });
 
+    const definition = {
+        name: "saveBirthday",
+        description: "Save the user's birthday to a file",
+        parameters: {
+            type: "object",
+            properties: {
+                date: {
+                    type: "string",
+                    description: "The birthday in YYYY-MM-DD format",
+                },
+            },
+            required: ["date"],
+        },
+    };
+
+    const writeBirthdayToFile = async ({ date }: { date: string }) => {
+        try {
+            await writeFile("tmp/birthday.txt", date);
+            return { success: true, message: "Birthday saved successfully" };
+        } catch (error) {
+            console.error("Error saving birthday:", error);
+            return { success: false, message: "Failed to save birthday" };
+        }
+    };
+
+    client.addTool(definition, writeBirthdayToFile);
+
     await client.connect();
     await client.waitForSessionCreated();
 
+    // @ts-ignore
     let mic: microphone.Mic | undefined;
     let speaker: Speaker | undefined;
     startAudioStream();
