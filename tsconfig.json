@@ -9,35 +9,30 @@
     "lib": [
       "ESNext",
       "DOM"
-    ], // Include the latest ECMAScript and DOM libraries
-    "strict": true, // Enable all strict type-checking options
-    "esModuleInterop": true, // Enables emit interoperability between CommonJS and ES Modules
-    "skipLibCheck": true, // Skip type checking of declaration files
-    "forceConsistentCasingInFileNames": true, // Ensure consistent casing in file names
-    "outDir": "./dist", // Redirect output structure to the 'dist' directory
-    // "rootDir": "./src", // Specify the root directory of input files
-    "resolveJsonModule": true, // Include modules imported with .json extension
-    "moduleResolution": "node", // Use Node.js module resolution strategy
-    "allowSyntheticDefaultImports": true, // Allow default imports from modules with no default export
-    "noImplicitAny": true, // Raise error on expressions and declarations with an implied 'any' type
-    "noUnusedLocals": true, // Report errors on unused locals
-    "noUnusedParameters": true, // Report errors on unused parameters
-    "noImplicitReturns": true, // Report error when not all code paths in function return a value
-    "noFallthroughCasesInSwitch": true, // Report errors for fallthrough cases in switch statements
+    ],
+    "outDir": "./dist",
+    "moduleResolution": "node",
     "baseUrl": "./src",
     "paths": {
       "*": [
         "types/*"
       ]
-    }
+    },
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src/**/*",
-    "examples/voice.tss",
+    "examples/voice/**/*",
+    "examples/text/**/*",
     "scripts/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "**/*.spec.ts"
   ]
 }

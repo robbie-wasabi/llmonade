@@ -6,17 +6,25 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "example:birthday": "node --loader ts-node/esm examples/birthday.ts",
-    "example:contact-info": "node --loader ts-node/esm examples/contact-info.ts"
+    "example:voice:birthday": "node --loader ts-node/esm examples/voice/birthday.ts",
+    "example:voice:contact-info": "node --loader ts-node/esm examples/voice/contact-info.ts",
+    "example:voice:seinfeld": "node --loader ts-node/esm examples/voice/seinfeld.ts",
+    "example:text:birthday": "node --loader ts-node/esm examples/text/birthday.ts",
+    "example:text:roshambo": "node --loader ts-node/esm examples/text/roshambo.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",
     "mic": "^2.1.2",
+    "openai": "^4.73.0",
     "openai-realtime-api": "^1.0.7",
     "speaker": "^0.5.5",
     "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
   },
   "include": [
     "src/**/*",

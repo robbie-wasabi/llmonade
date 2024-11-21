@@ -1,10 +1,29 @@
-import { writeFile, readFile } from "node:fs/promises";
+import { Assistant } from "./assistant.js"
+import { writeFile, readFile } from "node:fs/promises"
+
+export const endTool = (
+    assistant: Assistant
+): {
+    definition: any
+    handler: () => Promise<any>
+} => ({
+    definition: {
+        name: "endTool",
+        description: "End the conversation",
+    },
+    handler: async () => {
+        await assistant.end()
+    },
+})
 
 export const kbTool = (
     filePath: string
 ): {
-    definition: any;
-    handler: (data: Record<string, any>) => Promise<any>;
+    definition: any
+    handler: (
+        data: Record<string, any>,
+        onSuccess?: (data: Record<string, any>) => void
+    ) => Promise<any>
 } => ({
     definition: {
         name: "fsTool",
@@ -31,48 +50,49 @@ export const kbTool = (
             additionalProperties: false,
         },
     },
-    handler: async (data: Record<string, any>) => {
-        const { action, key, value } = data;
+    handler: async (
+        data: Record<string, any>,
+        onSuccess?: (data: Record<string, any>) => void
+    ) => {
+        const { action, key, value } = data
         try {
-            let existingData: Record<string, any> = {};
+            let existingData: Record<string, any> = {}
             try {
-                const fileContent = await readFile(filePath, "utf8");
+                const fileContent = await readFile(filePath, "utf8")
                 if (fileContent) {
-                    existingData = JSON.parse(fileContent);
+                    existingData = JSON.parse(fileContent)
                 }
             } catch {
                 // File doesn't exist or is empty
             }
 
             if (action === "read") {
-                const result = existingData[key] || null;
-                return { success: true, data: result };
+                const result = existingData[key] || null
+                return { success: true, data: result }
             } else if (action === "update") {
                 if (!value) {
                     return {
                         success: false,
                         message: "Value is required for update action",
-                    };
+                    }
                 }
-                existingData[key] = value;
-                await writeFile(
-                    filePath,
-                    JSON.stringify(existingData, null, 2)
-                );
-                console.log(`Data for '${key}' updated successfully!`);
+                existingData[key] = value
+                await writeFile(filePath, JSON.stringify(existingData, null, 2))
+                console.log(`Data for '${key}' updated successfully!`)
+                onSuccess?.(existingData)
                 return {
                     success: true,
                     message: `Data for '${key}' updated successfully`,
-                };
+                }
             } else {
-                return { success: false, message: "Invalid action specified" };
+                return { success: false, message: "Invalid action specified" }
             }
         } catch (error) {
-            console.error("Error in fsTool handler:", error);
+            console.error("Error in fsTool handler:", error)
             return {
                 success: false,
                 message: "Failed to perform the requested action",
-            };
+            }
         }
     },
-});
+})
