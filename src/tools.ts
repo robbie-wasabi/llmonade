@@ -58,62 +58,27 @@ export const kbTool = (
     console.log(items)
 
     try {
-      let existingItems: string[] = []
+      let existingData = {}
       try {
         const fileContent = await readFile(filePath, "utf8")
         if (fileContent) {
-          existingItems = JSON.parse(fileContent)
+          existingData = JSON.parse(fileContent) || {}
         }
       } catch {
-        // File doesn't exist or is empty
         console.log("File doesn't exist or is empty")
       }
 
-      if (action === "read") {
-        const formattedItems = existingItems.map((item) => `- ${item}`)
-        return { success: true, data: formattedItems }
+      // Update or add new data
+      const updatedData = {
+        ...existingData,
+        ...items,
       }
 
-      if (action === "update") {
-        if (!items || !Array.isArray(items)) {
-          return {
-            success: false,
-            message: "Items array is required for update action",
-          }
-        }
-
-        // Clean items and only add new ones
-        const cleanItems = items.map((item) =>
-          item.startsWith("- ") ? item.slice(2) : item
-        )
-
-        const updatedItems = [...existingItems]
-        for (const item of cleanItems) {
-          if (!updatedItems.includes(item)) {
-            updatedItems.push(item)
-          }
-        }
-
-        await writeFile(
-          filePath,
-          JSON.stringify(updatedItems, null, 2),
-        )
-
-        onSuccess?.(updatedItems)
-        return {
-          success: true,
-          message: "List updated successfully",
-          data: updatedItems.map((item) => `- ${item}`),
-        }
-      }
-
-      return { success: false, message: "Invalid action specified" }
+      await writeFile(filePath, JSON.stringify(updatedData, null, 2))
+      return updatedData
     } catch (error) {
       console.error("Error in fsTool handler:", error)
-      return {
-        success: false,
-        message: "Failed to perform the requested action",
-      }
+      throw error
     }
   },
 })

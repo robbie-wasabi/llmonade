@@ -23,5 +23,6 @@ declare module "mic" {
     fileType?: string
   }
 
+  // @ts-ignore
   export = mic
 }
