@@ -1,16 +1,16 @@
-import readline from "readline"
-import { VoiceAssistant } from "../../src/assistant-voice.js"
-import { kbTool } from "../../src/tools.js"
+import * as readline from "node:readline"
+import { VoiceAssistant } from "../../src/assistant-voice.ts"
+import { kbTool } from "../../src/tools.ts"
 
 async function main() {
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-        prompt: "> ",
-    })
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: "> ",
+  })
 
-    const assistant = new VoiceAssistant(
-        `
+  const assistant = new VoiceAssistant(
+    `
         INSTRUCTIONS:
         - be succinct and to the point
         - speak quickly and 
@@ -18,44 +18,44 @@ async function main() {
         - once you figure out the birthday, say, "whoopiee, I figured out your birthday!" and save it to a file called birthday.txt
         - once you have the birthday, you can end the conversation
         `,
-        [kbTool("./conversation.json")]
-    )
+    [kbTool("./tmp/birthday.txt")],
+  )
 
-    assistant.on("listening", (event) => {
-        console.log(`\n${event.content}`)
-        rl.prompt()
-    })
+  assistant.on("listening", (event) => {
+    console.log(`\n${event?.message}`)
+    rl.prompt()
+  })
 
-    assistant.on("silence", (event) => {
-        console.log(`\n${event.content}`)
-        rl.prompt()
-    })
+  assistant.on("silence", (event) => {
+    console.log(`\n${event?.message}`)
+    rl.prompt()
+  })
 
-    assistant.on("message", (event) => {
-        console.log(`\nAssistant: ${event.content}`)
-        rl.prompt()
-    })
+  assistant.on("message", (event) => {
+    console.log(`\nAssistant: ${event?.message}`)
+    rl.prompt()
+  })
 
-    assistant.on("audio", (event) => {
-        console.log(`\nPlaying: ${event.content}`)
-        rl.prompt()
-    })
+  assistant.on("audio", (event) => {
+    console.log(`\nPlaying: ${event?.message}`)
+    rl.prompt()
+  })
 
-    assistant.on("error", (event) => {
-        console.error(`\nError: ${event.content}`)
-        rl.prompt()
-    })
+  assistant.on("error", (event) => {
+    console.error(`\nError: ${event?.message}`)
+    rl.prompt()
+  })
 
-    await assistant.start()
+  await assistant.start()
 
-    if (assistant.isReady()) {
-        assistant.startListening()
-    }
+  if (assistant.isReady()) {
+    assistant.listen()
+  }
 
-    rl.on("close", () => {
-        console.log("\nGoodbye!")
-        process.exit(0)
-    })
+  rl.on("close", () => {
+    console.log("\nGoodbye!")
+    process.exit(0)
+  })
 }
 
 main()

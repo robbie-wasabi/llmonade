@@ -1,98 +1,119 @@
-import { Assistant } from "./assistant.js"
-import { writeFile, readFile } from "node:fs/promises"
+// deno-lint-ignore-file
+import { FunctionDefinition } from "openai/resources/index.js"
+import { Assistant } from "./assistant.ts"
+import { readFile, writeFile } from "node:fs/promises"
+
+export type ToolHandler = (
+  data: Record<string, any>,
+  onSuccess?: (data: string[]) => void,
+) => Promise<any>
 
 export const endTool = (
-    assistant: Assistant
+  assistant: Assistant,
 ): {
-    definition: any
-    handler: () => Promise<any>
+  definition: FunctionDefinition
+  handler: ToolHandler
 } => ({
-    definition: {
-        name: "endTool",
-        description: "End the conversation",
-    },
-    handler: async () => {
-        await assistant.end()
-    },
+  definition: {
+    name: "endTool",
+    description: "End the conversation",
+  },
+  handler: async () => {
+    await assistant.end()
+  },
 })
 
 export const kbTool = (
-    filePath: string
+  filePath: string,
 ): {
-    definition: any
-    handler: (
-        data: Record<string, any>,
-        onSuccess?: (data: Record<string, any>) => void
-    ) => Promise<any>
+  definition: FunctionDefinition
+  handler: ToolHandler
 } => ({
-    definition: {
-        name: "fsTool",
-        description:
-            "Read from or update the user's information in the knowledge base",
-        parameters: {
-            type: "object",
-            properties: {
-                action: {
-                    type: "string",
-                    enum: ["read", "update"],
-                    description: "Action to perform: read or update the data",
-                },
-                key: {
-                    type: "string",
-                    description: "The key of the information to read or update",
-                },
-                value: {
-                    type: "string",
-                    description: "The new value to update for the given key",
-                },
-            },
-            required: ["action", "key"],
-            additionalProperties: false,
+  definition: {
+    name: "fsTool",
+    description: "Read from or update a list of items in the knowledge base",
+    parameters: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: ["read", "update"],
+          description: "Action to perform: read or update the list",
         },
+        items: {
+          type: "array",
+          items: { type: "string" },
+          description: "Array of items to store",
+        },
+      },
+      required: ["action"],
+      additionalProperties: false,
     },
-    handler: async (
-        data: Record<string, any>,
-        onSuccess?: (data: Record<string, any>) => void
-    ) => {
-        const { action, key, value } = data
-        try {
-            let existingData: Record<string, any> = {}
-            try {
-                const fileContent = await readFile(filePath, "utf8")
-                if (fileContent) {
-                    existingData = JSON.parse(fileContent)
-                }
-            } catch {
-                // File doesn't exist or is empty
-            }
+  },
+  handler: async (
+    data: Record<string, any>,
+    onSuccess?: (data: string[]) => void,
+  ) => {
+    const { action, items } = data
+    console.log(items)
 
-            if (action === "read") {
-                const result = existingData[key] || null
-                return { success: true, data: result }
-            } else if (action === "update") {
-                if (!value) {
-                    return {
-                        success: false,
-                        message: "Value is required for update action",
-                    }
-                }
-                existingData[key] = value
-                await writeFile(filePath, JSON.stringify(existingData, null, 2))
-                console.log(`Data for '${key}' updated successfully!`)
-                onSuccess?.(existingData)
-                return {
-                    success: true,
-                    message: `Data for '${key}' updated successfully`,
-                }
-            } else {
-                return { success: false, message: "Invalid action specified" }
-            }
-        } catch (error) {
-            console.error("Error in fsTool handler:", error)
-            return {
-                success: false,
-                message: "Failed to perform the requested action",
-            }
+    try {
+      let existingItems: string[] = []
+      try {
+        const fileContent = await readFile(filePath, "utf8")
+        if (fileContent) {
+          existingItems = JSON.parse(fileContent)
         }
-    },
+      } catch {
+        // File doesn't exist or is empty
+        console.log("File doesn't exist or is empty")
+      }
+
+      if (action === "read") {
+        const formattedItems = existingItems.map((item) => `- ${item}`)
+        return { success: true, data: formattedItems }
+      }
+
+      if (action === "update") {
+        if (!items || !Array.isArray(items)) {
+          return {
+            success: false,
+            message: "Items array is required for update action",
+          }
+        }
+
+        // Clean items and only add new ones
+        const cleanItems = items.map((item) =>
+          item.startsWith("- ") ? item.slice(2) : item
+        )
+
+        const updatedItems = [...existingItems]
+        for (const item of cleanItems) {
+          if (!updatedItems.includes(item)) {
+            updatedItems.push(item)
+          }
+        }
+
+        await writeFile(
+          filePath,
+          JSON.stringify(updatedItems, null, 2),
+        )
+
+        onSuccess?.(updatedItems)
+        return {
+          success: true,
+          message: "List updated successfully",
+          data: updatedItems.map((item) => `- ${item}`),
+        }
+      }
+
+      return { success: false, message: "Invalid action specified" }
+    } catch (error) {
+      console.error("Error in fsTool handler:", error)
+      return {
+        success: false,
+        message: "Failed to perform the requested action",
+      }
+    }
+  },
 })

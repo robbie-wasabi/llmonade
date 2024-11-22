@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 .pnp/
-.pnp.js
+.pnp.ts
 
 # Build outputs
 dist/

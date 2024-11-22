@@ -1,0 +1,13 @@
+{
+  "fmt": {
+    "semiColons": false,
+    "indentWidth": 2
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "imports": {
+    "@std/log": "jsr:@std/log@^0.224.11"
+  }
+}

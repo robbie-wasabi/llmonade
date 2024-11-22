@@ -5,12 +5,7 @@
   "main": "main.ts",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "example:voice:birthday": "node --loader ts-node/esm examples/voice/birthday.ts",
-    "example:voice:contact-info": "node --loader ts-node/esm examples/voice/contact-info.ts",
-    "example:voice:seinfeld": "node --loader ts-node/esm examples/voice/seinfeld.ts",
-    "example:text:birthday": "node --loader ts-node/esm examples/text/birthday.ts",
-    "example:text:roshambo": "node --loader ts-node/esm examples/text/roshambo.ts"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
