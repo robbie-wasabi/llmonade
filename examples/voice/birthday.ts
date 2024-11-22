@@ -9,8 +9,8 @@ async function main() {
     prompt: "> ",
   })
 
-  const assistant = new VoiceAssistant(
-    `
+  const assistant = new VoiceAssistant({
+    instructions: `
         INSTRUCTIONS:
         - be succinct and to the point
         - speak quickly and 
@@ -18,8 +18,8 @@ async function main() {
         - once you figure out the birthday, say, "whoopiee, I figured out your birthday!" and save it to a file called birthday.txt
         - once you have the birthday, you can end the conversation
         `,
-    [kbTool("./tmp/birthday.txt")],
-  )
+    tools: [kbTool("./tmp/birthday.txt")],
+  })
 
   assistant.on("listening", (event) => {
     console.log(`\n${event?.message}`)

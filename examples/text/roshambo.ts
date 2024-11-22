@@ -8,13 +8,13 @@ const rl = readline.createInterface({
 })
 
 async function main() {
-  const assistant = new TextAssistant(
-    `
+  const assistant = new TextAssistant({
+    instructions: `
         you play rock paper scissors with the user.
         the user will select first.
         exit when the game is over.
         `,
-  )
+  })
 
   assistant.on("thinking", () => {
     process.stdout.write("🤔 ")

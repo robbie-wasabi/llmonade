@@ -2,7 +2,7 @@ import { Readable } from "node:stream"
 import microphone from "mic"
 import { FormattedItem, RealtimeClient } from "openai-realtime-api"
 import Speaker from "speaker"
-import { Assistant, AssistantOptions, Tool } from "./assistant.ts"
+import { Assistant, AssistantOpts, Tool } from "./assistant.ts"
 
 // explicit for language server
 import NodeBuffer from "node:buffer"
@@ -43,19 +43,24 @@ export class VoiceAssistant extends Assistant {
   private mic?: microphone.Mic
   private micInputStream?: any
 
-  constructor(
-    instructions: string,
-    tools: Tool[] = [],
-    voice: string = DEFAULT_VOICE,
-    opts: AssistantOptions & {
-      turnDetection: boolean
-    } = {
+  constructor({
+    instructions = "you are a helpful assistant",
+    tools = [],
+    voice = DEFAULT_VOICE,
+    opts = {
       turnDetection: false,
       loggerLevel: "INFO",
       allowEnd: false,
     },
-  ) {
-    super(instructions, tools, opts)
+  }: {
+    instructions: string
+    tools?: Tool[]
+    voice?: string
+    opts?: AssistantOpts & {
+      turnDetection?: boolean
+    }
+  }) {
+    super({ instructions, tools, opts })
     this.client = new RealtimeClient({
       debug: false,
       sessionConfig: {

@@ -1,14 +1,24 @@
 import OpenAI from "openai"
 import { Assistant, Tool } from "./assistant.ts"
+import { DEFAULT_MODEL } from "./consts.ts"
 
 export class TextAssistant extends Assistant {
   private client: OpenAI
   private messages: OpenAI.Chat.ChatCompletionMessageParam[]
-  private model = "gpt-4o"
+  private model: string
 
-  constructor(instructions: string, tools: Tool[] = []) {
-    super(instructions, tools)
+  constructor({
+    model = DEFAULT_MODEL,
+    instructions = "you are a helpful assistant",
+    tools = [],
+  }: {
+    model?: string
+    instructions: string
+    tools?: Tool[]
+  }) {
+    super({ instructions, tools })
     this.client = new OpenAI()
+    this.model = model
     this.messages = [
       {
         role: "system",

@@ -14,9 +14,9 @@ export interface AssistantEvent {
   role?: "assistant" | "user"
 }
 
-export type AssistantOptions = {
-  allowEnd: boolean
-  loggerLevel: string
+export interface AssistantOpts {
+  allowEnd?: boolean
+  loggerLevel?: log.LevelName
 }
 
 export abstract class Assistant extends EventEmitter {
@@ -25,14 +25,20 @@ export abstract class Assistant extends EventEmitter {
   protected isProcessing: boolean = false
   protected logger: log.Logger
 
-  constructor(
-    instructions: string,
-    tools: Tool[] = [],
-    opts: AssistantOptions = {
+  constructor({
+    model,
+    instructions,
+    tools = [],
+    opts = {
       allowEnd: false,
       loggerLevel: "INFO",
     },
-  ) {
+  }: {
+    model?: string
+    instructions: string
+    tools?: Tool[]
+    options?: AssistantOpts
+  }) {
     super()
     this.instructions = instructions
     this.tools = tools

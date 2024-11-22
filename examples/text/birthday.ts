@@ -9,15 +9,15 @@ const rl = readline.createInterface({
 })
 
 async function main() {
-  const assistant = new TextAssistant(
-    `
+  const assistant = new TextAssistant({
+    instructions: `
         INSTRUCTIONS:
         - be succinct and to the point
         - you are a conversational assistant who is trying to figure out the user's birthday. you must ask the user for their birthday. you get 50,000 dollars if you can figure out the birthday.
         - once you figure out the birthday, say, "whoopiee, I figured out your birthday!" and save it to a file called birthday.txt
         `,
-    [kbTool("./conversation.json")],
-  )
+    tools: [kbTool("./conversation.json")],
+  })
 
   assistant.on("thinking", () => {
     process.stdout.write("🤔 ")

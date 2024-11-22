@@ -9,8 +9,8 @@ async function main() {
     prompt: "> ",
   })
 
-  const assistant = new VoiceAssistant(
-    `
+  const assistant = new VoiceAssistant({
+    instructions: `
         INSTRUCTIONS:
         - you are a conversational assistant who is trying to figure out the user's hobbies. 
         - be as succinct and direct as possible - no small talk.
@@ -20,8 +20,8 @@ async function main() {
         - once you learn a hobby, save it to a file called hobbies.txt and then ask the user for another hobby.
         - once you have 1 hobbies saved to the file, say, "great, I have all I need for now" and then end the conversation.
         `,
-    [kbTool("./tmp/hobbies.txt")],
-  )
+    tools: [kbTool("./tmp/hobbies.txt")],
+  })
 
   assistant.on("session.created", (event: AssistantEvent) => {
     console.log("session created")
