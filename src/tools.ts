@@ -25,33 +25,6 @@ export type ToolHandler = (
   onSuccess?: (data: string[]) => void,
 ) => Promise<any>
 
-// export const endTool = (
-//   assistant: Assistant,
-// ): Tool => ({
-//   function: {
-//     definition: {
-//       name: "endTool",
-//       description: "End the conversation",
-//     },
-//   },
-//   handler: async (): Promise<void> => {
-//     await assistant.end()
-//   },
-// })
-
-export const endTool = (assistant: Assistant): Tool => ({
-  definition: {
-    function: {
-      name: "endTool",
-      description: "End the conversation",
-    },
-    type: "function",
-  },
-  handler: async (): Promise<void> => {
-    await assistant.end()
-  },
-})
-
 export const writeToFileTool = (
   filePath: string,
 ): Tool => ({

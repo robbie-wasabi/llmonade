@@ -1,5 +1,4 @@
-import { VoiceAssistant } from "../../src/assistant-voice.ts"
-import { writeToFileTool } from "../../src/tools.ts"
+import { VoiceAssistant, writeToFileTool } from "@robbie-wasabi/llmonade"
 
 async function main() {
   const assistant = new VoiceAssistant({

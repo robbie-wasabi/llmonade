@@ -79,7 +79,7 @@ export class VoiceAssistant extends Assistant {
     this.emit(EventType.SETTING_UP)
     this.tools.forEach((tool) => {
       this.client.addTool(
-        tool.definition as unknown as Realtime.PartialToolDefinition,
+        tool.definition.function as Realtime.PartialToolDefinition,
         tool.handler,
       )
     })
