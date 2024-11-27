@@ -1,6 +1,9 @@
 import * as readline from "node:readline"
-import { AssistantEvent, VoiceAssistant } from "../../src/assistant-voice.ts"
-import { endTool, kbTool } from "../../src/tools.ts"
+import {
+  type AssistantEvent,
+  VoiceAssistant,
+} from "../../src/assistant-voice.ts"
+import { writeToFileTool } from "../../src/tools.ts"
 
 async function main() {
   const rl = readline.createInterface({
@@ -20,7 +23,7 @@ async function main() {
         - once you learn a hobby, save it to a file called hobbies.txt and then ask the user for another hobby.
         - once you have 1 hobbies saved to the file, say, "great, I have all I need for now" and then end the conversation.
         `,
-    tools: [kbTool("./tmp/hobbies.txt")],
+    tools: [writeToFileTool("./tmp/hobbies.txt")],
   })
 
   assistant.on("session.created", (event: AssistantEvent) => {

@@ -1,11 +1,16 @@
-import "dotenv/config"
 import { EventEmitter } from "node:events"
 import * as log from "@std/log"
+import { DEFAULT_MODEL } from "./consts.ts"
+import type { Tool } from "./tools.ts"
 
-export interface Tool {
-  definition: any
-  handler: (...args: any[]) => Promise<any>
-}
+// export interface Tool {
+//   definition: {
+//     name: string
+//     description: string
+//     parameters: { [key: string]: any }
+//   }
+//   handler: (...args: unknown[]) => Promise<unknown>
+// }
 
 export interface AssistantEvent {
   type: "message" | "error" | "thinking" | "audio" | "silence" | "listening"
@@ -22,8 +27,9 @@ export interface AssistantOpts {
 export abstract class Assistant extends EventEmitter {
   protected tools: Tool[]
   protected instructions: string
-  protected isProcessing: boolean = false
+  protected isProcessing = false
   protected logger: log.Logger
+  protected model: string
 
   constructor({
     model,
@@ -37,11 +43,12 @@ export abstract class Assistant extends EventEmitter {
     model?: string
     instructions: string
     tools?: Tool[]
-    options?: AssistantOpts
+    opts?: AssistantOpts
   }) {
     super()
     this.instructions = instructions
     this.tools = tools
+    this.model = model ?? DEFAULT_MODEL
 
     log.setup({
       handlers: {
@@ -70,12 +77,16 @@ export abstract class Assistant extends EventEmitter {
 
   abstract end(): Promise<void>
 
-  endTool = {
+  endTool: Tool = {
     definition: {
-      name: "endTool",
-      description: "End the conversation",
+      type: "function",
+      function: {
+        name: "endTool",
+        description: "End the conversation",
+        parameters: {},
+      },
     },
-    handler: async () => {
+    handler: async (): Promise<void> => {
       await this.end()
     },
   }

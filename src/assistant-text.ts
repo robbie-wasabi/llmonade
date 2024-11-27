@@ -1,11 +1,15 @@
 import OpenAI from "openai"
-import { Assistant, Tool } from "./assistant.ts"
+import { Assistant } from "./assistant.ts"
+import type { Tool } from "./tools.ts"
 import { DEFAULT_MODEL } from "./consts.ts"
 
 export class TextAssistant extends Assistant {
   private client: OpenAI
   private messages: OpenAI.Chat.ChatCompletionMessageParam[]
-  private model: string
+
+  override end(): Promise<void> {
+    throw new Error("Method not implemented.")
+  }
 
   constructor({
     model = DEFAULT_MODEL,
@@ -37,7 +41,7 @@ export class TextAssistant extends Assistant {
     }
   }
 
-  async sendMessage(text: string) {
+  async sendMessage(text: string): Promise<string | null> {
     if (this.isProcessing) {
       throw new Error("Still processing previous message")
     }
@@ -63,9 +67,7 @@ export class TextAssistant extends Assistant {
       if (responseMessage.tool_calls) {
         for (const toolCall of responseMessage.tool_calls) {
           const tool = this.tools.find(
-            (t) =>
-              t.definition.function.name ===
-                toolCall.function.name,
+            (t) => t.definition.function.name === toolCall.function.name,
           )
           if (tool) {
             const args = JSON.parse(toolCall.function.arguments)
@@ -112,7 +114,7 @@ export class TextAssistant extends Assistant {
     }
   }
 
-  getMessages() {
+  getMessages(): OpenAI.Chat.ChatCompletionMessageParam[] {
     return this.messages
   }
 
@@ -120,4 +122,37 @@ export class TextAssistant extends Assistant {
   //     // TODO
   //     console.log("Conversation ended")
   // }
+
+  static create(): TextAssistantBuilder {
+    return new TextAssistantBuilder()
+  }
+}
+
+class TextAssistantBuilder {
+  private model: string = DEFAULT_MODEL
+  private instructions: string = "you are a helpful assistant"
+  private tools: Tool[] = []
+
+  withModel(model: string): TextAssistantBuilder {
+    this.model = model
+    return this
+  }
+
+  withInstructions(instructions: string): TextAssistantBuilder {
+    this.instructions = instructions
+    return this
+  }
+
+  withTools(tools: Tool[]): TextAssistantBuilder {
+    this.tools = tools
+    return this
+  }
+
+  build(): TextAssistant {
+    return new TextAssistant({
+      model: this.model,
+      instructions: this.instructions,
+      tools: this.tools,
+    })
+  }
 }

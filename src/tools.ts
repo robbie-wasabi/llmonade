@@ -1,54 +1,83 @@
 // deno-lint-ignore-file
-import { FunctionDefinition } from "openai/resources/index.js"
+import type { OpenAI } from "openai"
 import { Assistant } from "./assistant.ts"
 import { readFile, writeFile } from "node:fs/promises"
+import type { Realtime } from "openai-realtime-api"
+
+// from openai
+// export interface ChatCompletionTool {
+//   function: Shared.FunctionDefinition;
+//   type: 'function';
+// }
+
+export interface RealtimeTool {
+  function: Realtime.PartialToolDefinition
+  type: "function"
+}
+
+export type Tool = {
+  definition: OpenAI.ChatCompletionTool | RealtimeTool
+  handler: ToolHandler
+}
 
 export type ToolHandler = (
   data: Record<string, any>,
   onSuccess?: (data: string[]) => void,
 ) => Promise<any>
 
-export const endTool = (
-  assistant: Assistant,
-): {
-  definition: FunctionDefinition
-  handler: ToolHandler
-} => ({
+// export const endTool = (
+//   assistant: Assistant,
+// ): Tool => ({
+//   function: {
+//     definition: {
+//       name: "endTool",
+//       description: "End the conversation",
+//     },
+//   },
+//   handler: async (): Promise<void> => {
+//     await assistant.end()
+//   },
+// })
+
+export const endTool = (assistant: Assistant): Tool => ({
   definition: {
-    name: "endTool",
-    description: "End the conversation",
+    function: {
+      name: "endTool",
+      description: "End the conversation",
+    },
+    type: "function",
   },
-  handler: async () => {
+  handler: async (): Promise<void> => {
     await assistant.end()
   },
 })
 
-export const kbTool = (
+export const writeToFileTool = (
   filePath: string,
-): {
-  definition: FunctionDefinition
-  handler: ToolHandler
-} => ({
+): Tool => ({
   definition: {
-    name: "fsTool",
-    description: "Read from or update a list of items in the knowledge base",
-    parameters: {
-      type: "object",
-      properties: {
-        action: {
-          type: "string",
-          enum: ["read", "update"],
-          description: "Action to perform: read or update the list",
+    function: {
+      name: "fsTool",
+      description: "Read from or update a list of items in the knowledge base",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["read", "update"],
+            description: "Action to perform: read or update the list",
+          },
+          items: {
+            type: "array",
+            items: { type: "string" },
+            description: "Array of items to store",
+          },
         },
-        items: {
-          type: "array",
-          items: { type: "string" },
-          description: "Array of items to store",
-        },
+        required: ["action"],
+        additionalProperties: false,
       },
-      required: ["action"],
-      additionalProperties: false,
     },
+    type: "function",
   },
   handler: async (
     data: Record<string, any>,

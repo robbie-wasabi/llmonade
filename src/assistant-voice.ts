@@ -1,11 +1,14 @@
-import { Readable } from "node:stream"
 import microphone from "mic"
-import { FormattedItem, RealtimeClient } from "openai-realtime-api"
-import Speaker from "speaker"
-import { Assistant, AssistantOpts, Tool } from "./assistant.ts"
+import type Speaker from "speaker"
+import { Assistant, type AssistantOpts } from "./assistant.ts"
 
-// explicit for language server
-import NodeBuffer from "node:buffer"
+import { AudioBufferSourceNode, AudioContext } from "node-web-audio-api"
+import {
+  type FormattedItem,
+  type Realtime,
+  RealtimeClient,
+} from "openai-realtime-api"
+import type { RealtimeTool, Tool } from "./tools.ts"
 
 const DEFAULT_VOICE = "shimmer"
 
@@ -71,12 +74,15 @@ export class VoiceAssistant extends Assistant {
     })
   }
 
-  async start(greeting?: string) {
+  async start(_greeting?: string) {
     this.logger.info("starting...")
     this.emit(EventType.SETTING_UP)
-    this.tools.forEach((tool) =>
-      this.client.addTool(tool.definition, tool.handler)
-    )
+    this.tools.forEach((tool) => {
+      this.client.addTool(
+        tool.definition as unknown as Realtime.PartialToolDefinition,
+        tool.handler,
+      )
+    })
     this.logger.info("connected to client.")
     await this.client.connect()
     this.logger.info("connected to OpenAI.")
@@ -130,7 +136,7 @@ export class VoiceAssistant extends Assistant {
       })
 
       this.micInputStream = this.mic.getAudioStream()
-      this.micInputStream.on("error", (error: any) => {
+      this.micInputStream.on("error", (error: Error) => {
         this.logger.error("Error starting microphone", error)
         this.emit(EventType.ERROR, {
           type: "error",
@@ -142,18 +148,21 @@ export class VoiceAssistant extends Assistant {
       this.mic.start()
       this.logger.info("microphone started.")
 
-      let buf: any = NodeBuffer.Buffer.alloc(0)
+      let buf = new Uint8Array(0)
       const chunkSize = 4800 // 0.2 seconds of audio at 24kHz
 
-      this.micInputStream.on("data", (data: NodeBuffer.Buffer) => {
-        // @ts-ignore
+      this.micInputStream.on("data", (data: Uint8Array) => {
         this.logger.info(`Data received: ${data.length} bytes`)
         if (!this.isListening) return
 
-        buf = NodeBuffer.Buffer.concat([buf, data])
+        const newBuf = new Uint8Array(buf.length + data.length)
+        newBuf.set(buf)
+        newBuf.set(data, buf.length)
+        buf = newBuf
+
         while (buf.length >= chunkSize) {
-          const chunk = buf.subarray(0, chunkSize)
-          buf = buf.subarray(chunkSize)
+          const chunk = buf.slice(0, chunkSize)
+          buf = buf.slice(chunkSize)
 
           const int16Array = new Int16Array(
             chunk.buffer,
@@ -207,42 +216,38 @@ export class VoiceAssistant extends Assistant {
 
   private async playAudio(audioData: Int16Array) {
     try {
-      if (!this.speaker) {
-        this.speaker = new Speaker({
-          channels: 1,
-          bitDepth: 16,
-          sampleRate: this.client.conversation.frequency,
-        })
+      const audioContext = new AudioContext()
+      const buffer = audioContext.createBuffer(
+        1,
+        audioData.length,
+        this.client.conversation.frequency,
+      )
+      const channelData = buffer.getChannelData(0)
+
+      // Convert Int16Array to Float32Array
+      for (let i = 0; i < audioData.length; i++) {
+        channelData[i] = audioData[i] / 32768.0
       }
 
-      const buf: any = NodeBuffer.Buffer.from(audioData.buffer)
-      const readableStream = new Readable({
-        read() {
-          this.push(buf)
-          this.push(null)
-        },
-      })
+      const source = new AudioBufferSourceNode(audioContext, { buffer })
+      source.connect(audioContext.destination)
 
-      await new Promise((resolve, reject) => {
-        this.speaker!.on("finish", () => {
-          this.speaker?.end()
-          this.speaker = undefined
+      await new Promise((resolve, _reject) => {
+        source.onended = () => {
+          audioContext.close()
           resolve(null)
-        })
-
-        this.speaker!.on("error", (err) => {
-          this.logger.error("speaker error", err)
-          this.speaker = undefined
-          reject(err)
-        })
-
-        readableStream.pipe(this.speaker!)
+        }
+        // TODO
+        // source.onerror = (err: any) => {
+        //   audioContext.close()
+        //   reject(err)
+        // }
+        source.start()
       })
 
       this.logger.info("playing audio response")
     } catch (err) {
       this.logger.error("error playing audio", err)
-      this.speaker = undefined
     }
   }
 
@@ -259,5 +264,51 @@ export class VoiceAssistant extends Assistant {
         error,
       })
     }
+  }
+
+  static create(): VoiceAssistantBuilder {
+    return new VoiceAssistantBuilder()
+  }
+}
+
+class VoiceAssistantBuilder {
+  private instructions: string = "you are a helpful assistant"
+  private tools: Tool[] = []
+  private voice: string = DEFAULT_VOICE
+  private opts: AssistantOpts & { turnDetection?: boolean } = {
+    turnDetection: false,
+    loggerLevel: "INFO",
+    allowEnd: false,
+  }
+
+  withInstructions(instructions: string): VoiceAssistantBuilder {
+    this.instructions = instructions
+    return this
+  }
+
+  withTools(tools: Tool[]): VoiceAssistantBuilder {
+    this.tools = tools
+    return this
+  }
+
+  withVoice(voice: string): VoiceAssistantBuilder {
+    this.voice = voice
+    return this
+  }
+
+  withOptions(
+    opts: Partial<AssistantOpts & { turnDetection?: boolean }>,
+  ): VoiceAssistantBuilder {
+    this.opts = { ...this.opts, ...opts }
+    return this
+  }
+
+  build(): VoiceAssistant {
+    return new VoiceAssistant({
+      instructions: this.instructions,
+      tools: this.tools,
+      voice: this.voice,
+      opts: this.opts,
+    })
   }
 }

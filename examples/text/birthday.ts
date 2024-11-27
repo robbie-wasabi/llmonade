@@ -1,7 +1,7 @@
-import "dotenv/config"
 import * as readline from "node:readline"
 import { TextAssistant } from "../../src/assistant-text.ts"
-import { kbTool } from "../../src/tools.ts"
+import { writeToFileTool } from "../../src/tools.ts"
+import process from "node:process"
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -16,11 +16,11 @@ async function main() {
         - you are a conversational assistant who is trying to figure out the user's birthday. you must ask the user for their birthday. you get 50,000 dollars if you can figure out the birthday.
         - once you figure out the birthday, say, "whoopiee, I figured out your birthday!" and save it to a file called birthday.txt
         `,
-    tools: [kbTool("./conversation.json")],
+    tools: [writeToFileTool("./conversation.json")],
   })
 
   assistant.on("thinking", () => {
-    process.stdout.write("🤔 ")
+    console.log("🤔")
   })
 
   assistant.on("message", (event) => {

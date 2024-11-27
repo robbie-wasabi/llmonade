@@ -1,6 +1,4 @@
-import "dotenv/config"
 import { VoiceAssistant } from "../../src/assistant-voice.ts"
-import { kbTool } from "../../src/tools.ts"
 
 function main() {
   const teacher = new VoiceAssistant({

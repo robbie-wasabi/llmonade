@@ -1,6 +1,5 @@
-import "dotenv/config"
 import { VoiceAssistant } from "../../src/assistant-voice.ts"
-import { kbTool } from "../../src/tools.ts"
+import { writeToFileTool } from "../../src/tools.ts"
 
 function main() {
   const assistant = new VoiceAssistant({
@@ -10,8 +9,8 @@ function main() {
         you get 10,000 dollars for each piece of information you figure out and a 100,000 dollar bonus if you can figure out all of the information.
         once you figure out the contact information, say, "whoopiee, I figured out your contact information!" and save it to a file called contact-info.txt
     `,
-    [kbTool("./tmp/contact-info.text")],
-  )
+    tools: [writeToFileTool("./tmp/contact-info.text")],
+  })
   assistant.start().then(() => assistant.listen())
 }
 

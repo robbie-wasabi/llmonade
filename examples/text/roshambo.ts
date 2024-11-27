@@ -1,6 +1,6 @@
-import "dotenv/config"
 import * as readline from "node:readline"
 import { TextAssistant } from "../../src/assistant-text.ts"
+import process from "node:process"
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -40,7 +40,7 @@ async function main() {
       try {
         await assistant.sendMessage(input)
       } catch (err) {
-        console.error("Failed to get response")
+        console.error(err)
       }
       askQuestion()
     })

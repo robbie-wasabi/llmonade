@@ -1,13 +1,31 @@
 {
+  "name": "@robbie-wasabi/llmonade",
+  "version": "0.0.1",
+  "description": "A conversational AI assistant",
+  "exports": {
+    ".": "./src/mod.ts"
+  },
   "fmt": {
     "semiColons": false,
     "indentWidth": 2
   },
   "compilerOptions": {
     "lib": ["deno.window"],
-    "strict": true
+    "strict": true,
+    "types": ["node"]
   },
   "imports": {
-    "@std/log": "jsr:@std/log@^0.224.11"
-  }
+    "openai": "jsr:@openai/openai@^4.71.1",
+    "@std/log": "jsr:@std/log@^0.224.11",
+    "speaker": "npm:speaker@0.5.5",
+    "@types/node": "npm:@types/node@22.5.4",
+    "node-web-audio-api": "npm:node-web-audio-api@0.21.3",
+    "openai-realtime-api": "npm:openai-realtime-api@1.0.7",
+    "mic": "npm:mic@2.1.2"
+  },
+  "publish": {
+    "include": ["src/", "README.md", "LICENSE"],
+    "exclude": ["**/tests/", "**/*.test.ts"]
+  },
+  "nodeModulesDir": "auto"
 }

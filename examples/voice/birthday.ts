@@ -1,14 +1,7 @@
-import * as readline from "node:readline"
 import { VoiceAssistant } from "../../src/assistant-voice.ts"
-import { kbTool } from "../../src/tools.ts"
+import { writeToFileTool } from "../../src/tools.ts"
 
 async function main() {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    prompt: "> ",
-  })
-
   const assistant = new VoiceAssistant({
     instructions: `
         INSTRUCTIONS:
@@ -18,32 +11,27 @@ async function main() {
         - once you figure out the birthday, say, "whoopiee, I figured out your birthday!" and save it to a file called birthday.txt
         - once you have the birthday, you can end the conversation
         `,
-    tools: [kbTool("./tmp/birthday.txt")],
+    tools: [writeToFileTool("./tmp/birthday.txt")],
   })
 
   assistant.on("listening", (event) => {
     console.log(`\n${event?.message}`)
-    rl.prompt()
   })
 
   assistant.on("silence", (event) => {
     console.log(`\n${event?.message}`)
-    rl.prompt()
   })
 
   assistant.on("message", (event) => {
     console.log(`\nAssistant: ${event?.message}`)
-    rl.prompt()
   })
 
   assistant.on("audio", (event) => {
     console.log(`\nPlaying: ${event?.message}`)
-    rl.prompt()
   })
 
   assistant.on("error", (event) => {
     console.error(`\nError: ${event?.message}`)
-    rl.prompt()
   })
 
   await assistant.start()
@@ -51,11 +39,6 @@ async function main() {
   if (assistant.isReady()) {
     assistant.listen()
   }
-
-  rl.on("close", () => {
-    console.log("\nGoodbye!")
-    process.exit(0)
-  })
 }
 
 main()
