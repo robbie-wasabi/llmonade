@@ -141,13 +141,17 @@ export class VoiceAssistant extends Assistant {
       })
 
       this.micInputStream = this.mic.getAudioStream()
+      if (!this.micInputStream) {
+        this.logger.error("Error getting audio stream")
+        this.emit(EventType.ERROR, {
+          error: new Error("Failed to get audio stream"),
+        })
+        return
+      }
+
       this.micInputStream.on("error", (error: Error) => {
         this.logger.error("Error starting microphone", error)
-        this.emit(EventType.ERROR, {
-          type: "error",
-          content: "Error starting microphone",
-          error,
-        })
+        this.emit(EventType.ERROR, { error })
       })
 
       this.mic.start()
@@ -320,7 +324,7 @@ export class VoiceAssistantBuilder extends VoiceAssistant {
     return this
   }
 
-  startListening() {
+  startListening(): this {
     this.start().then(() => {
       this.listen()
     })
