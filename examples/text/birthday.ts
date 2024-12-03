@@ -21,7 +21,7 @@ const assistant = TextAssistant.new()
   .onThinking((_message) => {
     console.log(`🤖: 🤔`)
   })
-  .onMessage((message) => {
+  .onReply((message) => {
     console.log(`🤖: ${message}`)
   })
   .onError((message) => {
@@ -34,7 +34,7 @@ const askQuestion = () => {
       rl.close()
       return
     }
-    await assistant.sendMessage(input)
+    await assistant.chat(input)
     askQuestion()
   })
 }

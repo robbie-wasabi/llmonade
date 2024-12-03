@@ -15,14 +15,12 @@ const assistant = TextAssistant.new()
   .onThinking((_message) => {
     console.log(`🤖: 🤔`)
   })
-  .onMessage((message) => {
-    console.log(`🤖: ${message}`)
-  })
 
 const askQuestion = () => {
   rl.question("You: ", async (input) => {
     try {
-      await assistant.sendMessage(input)
+      const reply = await assistant.chat(input)
+      console.log(`🤖: ${reply}`)
     } catch (err) {
       console.error(err)
     }

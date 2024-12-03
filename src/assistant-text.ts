@@ -44,7 +44,7 @@ export class TextAssistant extends Assistant {
     }
   }
 
-  async sendMessage(text: string): Promise<string | null> {
+  async chat(text: string): Promise<string | null> {
     if (this.isProcessing) {
       throw new Error("Still processing previous message")
     }
@@ -98,8 +98,8 @@ export class TextAssistant extends Assistant {
       this.messages.push(responseMessage)
 
       this.isProcessing = false
-      this.emit("message", {
-        type: "message",
+      this.emit("reply", {
+        type: "reply",
         content: responseMessage.content,
         role: "assistant",
       })
@@ -158,8 +158,8 @@ export class TextAssistantBuilder extends TextAssistant {
     return this
   }
 
-  onMessage(handler: (message: string) => void): this {
-    this.on("message", (event) => {
+  onReply(handler: (message: string) => void): this {
+    this.on("reply", (event) => {
       if (event.content) handler(event.content)
     })
     return this
