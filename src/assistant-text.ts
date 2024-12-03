@@ -1,11 +1,12 @@
+// deno-lint-ignore-file ban-ts-comment
 import OpenAI from "openai"
 import { Assistant } from "./assistant.ts"
 import type { Tool } from "./tools.ts"
 import { DEFAULT_MODEL } from "./consts.ts"
 
 export class TextAssistant extends Assistant {
-  private client: OpenAI
-  private messages: OpenAI.Chat.ChatCompletionMessageParam[]
+  client: OpenAI
+  messages: OpenAI.Chat.ChatCompletionMessageParam[]
 
   override end(): Promise<void> {
     throw new Error("Method not implemented.")
@@ -13,25 +14,27 @@ export class TextAssistant extends Assistant {
 
   constructor({
     model = DEFAULT_MODEL,
-    instructions = "you are a helpful assistant",
+    instructions = null,
     tools = [],
   }: {
     model?: string
-    instructions: string
+    instructions: string | null
     tools?: Tool[]
   }) {
     super({ instructions, tools })
     this.client = new OpenAI()
     this.model = model
-    this.messages = [
-      {
+    this.messages = []
+
+    if (instructions) {
+      this.messages.push({
         role: "system",
         content: instructions,
-      },
-    ]
+      })
+    }
   }
 
-  async start(greeting?: string) {
+  async start(greeting?: string): Promise<void> {
     console.log("Conversation started")
     if (greeting) {
       this.messages.push({
@@ -93,7 +96,6 @@ export class TextAssistant extends Assistant {
       }
 
       this.messages.push(responseMessage)
-      console.log(`Assistant: ${responseMessage.content}`)
 
       this.isProcessing = false
       this.emit("message", {
@@ -123,36 +125,57 @@ export class TextAssistant extends Assistant {
   //     console.log("Conversation ended")
   // }
 
-  static create(): TextAssistantBuilder {
+  static new(): TextAssistantBuilder {
     return new TextAssistantBuilder()
   }
 }
 
-class TextAssistantBuilder {
-  private model: string = DEFAULT_MODEL
-  private instructions: string = "you are a helpful assistant"
-  private tools: Tool[] = []
+export class TextAssistantBuilder extends TextAssistant {
+  constructor() {
+    super({
+      model: DEFAULT_MODEL,
+      instructions: null,
+      tools: [],
+    })
+  }
 
-  withModel(model: string): TextAssistantBuilder {
+  withModel(model: string): this {
     this.model = model
     return this
   }
 
-  withInstructions(instructions: string): TextAssistantBuilder {
+  withInstructions(instructions: string): this {
     this.instructions = instructions
+    this.messages.push({
+      role: "system",
+      content: instructions,
+    })
     return this
   }
 
-  withTools(tools: Tool[]): TextAssistantBuilder {
+  withTools(tools: Tool[]): this {
     this.tools = tools
     return this
   }
 
-  build(): TextAssistant {
-    return new TextAssistant({
-      model: this.model,
-      instructions: this.instructions,
-      tools: this.tools,
+  onMessage(handler: (message: string) => void): this {
+    this.on("message", (event) => {
+      if (event.content) handler(event.content)
     })
+    return this
+  }
+
+  onThinking(handler: (message: string) => void): this {
+    this.on("thinking", (event) => {
+      if (event.content) handler(event.content)
+    })
+    return this
+  }
+
+  onError(handler: (error: string) => void): this {
+    this.on("error", (event) => {
+      if (event.content) handler(event.content)
+    })
+    return this
   }
 }

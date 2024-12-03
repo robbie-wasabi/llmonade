@@ -15,6 +15,7 @@
     "types": ["node"]
   },
   "imports": {
+    "@ricky0123/vad-web": "npm:@ricky0123/vad-web@^0.0.21",
     "openai": "jsr:@openai/openai@^4.71.1",
     "@std/log": "jsr:@std/log@^0.224.11",
     "speaker": "npm:speaker@0.5.5",

@@ -1,14 +1,14 @@
 import microphone from "mic"
 import type Speaker from "speaker"
 import { Assistant, type AssistantOpts } from "./assistant.ts"
-
 import { AudioBufferSourceNode, AudioContext } from "node-web-audio-api"
 import {
   type FormattedItem,
   type Realtime,
   RealtimeClient,
 } from "openai-realtime-api"
-import type { RealtimeTool, Tool } from "./tools.ts"
+import type { Tool } from "./tools.ts"
+import type { Transform } from "node:stream"
 
 const DEFAULT_VOICE = "shimmer"
 
@@ -40,35 +40,37 @@ export type AssistantEvent = {
 }
 
 export class VoiceAssistant extends Assistant {
-  private client: RealtimeClient
-  private speaker?: Speaker
-  private isListening: boolean = false
-  private mic?: microphone.Mic
-  private micInputStream?: any
+  client: RealtimeClient
+  speaker?: Speaker
+  isListening: boolean = false
+  mic?: microphone.Mic
+  micInputStream?: Transform
+  voice: string
 
   constructor({
-    instructions = "you are a helpful assistant",
+    instructions = null,
     tools = [],
     voice = DEFAULT_VOICE,
     opts = {
-      turnDetection: false,
+      turnDetection: undefined,
       loggerLevel: "INFO",
       allowEnd: false,
     },
   }: {
-    instructions: string
+    instructions: string | null
     tools?: Tool[]
     voice?: string
     opts?: AssistantOpts & {
-      turnDetection?: boolean
+      turnDetection?: Realtime.TurnDetection
     }
   }) {
     super({ instructions, tools, opts })
+    this.voice = voice
     this.client = new RealtimeClient({
       debug: false,
       sessionConfig: {
-        voice,
-        instructions: this.instructions,
+        voice: this.voice,
+        instructions: instructions ?? undefined,
         turn_detection: opts.turnDetection ? undefined : null,
       },
     })
@@ -119,6 +121,9 @@ export class VoiceAssistant extends Assistant {
     this.playAudio(item.formatted.audio)
   }
 
+  lastUserSpeakingTime: number = 0
+  userSpeakingTimeoutThreshold: number = 2000
+
   listen() {
     if (this.isListening) return
     this.logger.info("Listening for user input...")
@@ -149,12 +154,9 @@ export class VoiceAssistant extends Assistant {
       this.logger.info("microphone started.")
 
       let buf = new Uint8Array(0)
-      const chunkSize = 4800 // 0.2 seconds of audio at 24kHz
-
+      const chunkSize = 4800
       this.micInputStream.on("data", (data: Uint8Array) => {
-        this.logger.info(`Data received: ${data.length} bytes`)
         if (!this.isListening) return
-
         const newBuf = new Uint8Array(buf.length + data.length)
         newBuf.set(buf)
         newBuf.set(data, buf.length)
@@ -175,17 +177,6 @@ export class VoiceAssistant extends Assistant {
           } catch (err) {
             this.logger.error("Error sending audio data", err)
           }
-        }
-      })
-
-      this.micInputStream.on("silence", () => {
-        this.logger.info("silence detected")
-        this.isProcessing = true
-        try {
-          if (!this.client.isConnected) return
-          this.client.createResponse()
-        } catch (err) {
-          this.logger.error("Error creating response", err)
         }
       })
     } catch (err) {
@@ -244,8 +235,6 @@ export class VoiceAssistant extends Assistant {
         // }
         source.start()
       })
-
-      this.logger.info("playing audio response")
     } catch (err) {
       this.logger.error("error playing audio", err)
     }
@@ -266,49 +255,75 @@ export class VoiceAssistant extends Assistant {
     }
   }
 
-  static create(): VoiceAssistantBuilder {
+  static new(): VoiceAssistantBuilder {
     return new VoiceAssistantBuilder()
   }
 }
 
-class VoiceAssistantBuilder {
-  private instructions: string = "you are a helpful assistant"
-  private tools: Tool[] = []
-  private voice: string = DEFAULT_VOICE
-  private opts: AssistantOpts & { turnDetection?: boolean } = {
-    turnDetection: false,
-    loggerLevel: "INFO",
-    allowEnd: false,
+export class VoiceAssistantBuilder extends VoiceAssistant {
+  constructor() {
+    super({
+      instructions: null,
+      tools: [],
+      voice: DEFAULT_VOICE,
+      opts: {
+        turnDetection: undefined,
+        loggerLevel: "INFO",
+        allowEnd: false,
+      },
+    })
   }
 
-  withInstructions(instructions: string): VoiceAssistantBuilder {
-    this.instructions = instructions
-    return this
-  }
-
-  withTools(tools: Tool[]): VoiceAssistantBuilder {
-    this.tools = tools
-    return this
-  }
-
-  withVoice(voice: string): VoiceAssistantBuilder {
+  withVoice(voice: string): this {
     this.voice = voice
     return this
   }
 
-  withOptions(
-    opts: Partial<AssistantOpts & { turnDetection?: boolean }>,
-  ): VoiceAssistantBuilder {
-    this.opts = { ...this.opts, ...opts }
+  withInstructions(instructions: string | null): this {
+    this.instructions = instructions
+    if (instructions) {
+      this.client.sessionConfig.instructions = instructions
+    }
     return this
   }
 
-  build(): VoiceAssistant {
-    return new VoiceAssistant({
-      instructions: this.instructions,
-      tools: this.tools,
-      voice: this.voice,
-      opts: this.opts,
+  withTools(tools: Tool[]): this {
+    this.tools = tools
+    return this
+  }
+
+  withOpts(
+    opts: AssistantOpts & { turnDetection?: Realtime.TurnDetection },
+  ): this {
+    this.client.sessionConfig.turn_detection = opts.turnDetection ?? null
+    return this
+  }
+
+  onMessage(handler: (message: string) => void): this {
+    this.on("message", (event) => {
+      if (event.content) handler(event.content)
     })
+    return this
+  }
+
+  onThinking(handler: (message: string) => void): this {
+    this.on("thinking", (event) => {
+      if (event.content) handler(event.content)
+    })
+    return this
+  }
+
+  onError(handler: (error: string) => void): this {
+    this.on("error", (event) => {
+      if (event.error) handler(event.error.message)
+    })
+    return this
+  }
+
+  startListening() {
+    this.start().then(() => {
+      this.listen()
+    })
+    return this
   }
 }

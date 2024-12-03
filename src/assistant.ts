@@ -26,7 +26,7 @@ export interface AssistantOpts {
 
 export abstract class Assistant extends EventEmitter {
   protected tools: Tool[]
-  protected instructions: string
+  protected instructions: string | null
   protected isProcessing = false
   protected logger: log.Logger
   protected model: string
@@ -41,7 +41,7 @@ export abstract class Assistant extends EventEmitter {
     },
   }: {
     model?: string
-    instructions: string
+    instructions: string | null
     tools?: Tool[]
     opts?: AssistantOpts
   }) {
