@@ -1,5 +1,7 @@
 # LLMonade 🍋
 
+https://github.com/robbie-wasabi/llmonade
+
 A simple yet powerful SDK for building conversational AI assistants using
 OpenAI. Supports both text and voice interactions.
 
@@ -11,7 +13,8 @@ OpenAI. Supports both text and voice interactions.
 - Real-time voice interactions
 - Event-driven architecture
 - File storage capabilities
-- Easily integrate with Discord, telegram, etc...
+- Easily integrate with Discord, telegram, etc... (less than 40 lines of code
+  total - [see example](examples/discord-chatbot.ts))
 
 ## Installation
 
